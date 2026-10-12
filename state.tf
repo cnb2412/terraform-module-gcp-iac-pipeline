@@ -14,7 +14,7 @@ resource "google_storage_bucket" "tfstate" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
