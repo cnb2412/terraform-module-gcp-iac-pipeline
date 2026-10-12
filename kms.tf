@@ -8,15 +8,15 @@ resource "google_kms_key_ring" "tfstate" {
   location = var.location
 }
 
-resource "google_kms_crypto_key" "tfstate" {
-  for_each = var.environments
-  name     = "tfstate-${each.key}"
-  key_ring = google_kms_key_ring.tfstate.id
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
+# resource "google_kms_crypto_key" "tfstate" {
+#   for_each = var.environments
+#   name     = "tfstate-${each.key}"
+#   key_ring = google_kms_key_ring.tfstate.id
+#
+#   lifecycle {
+#     prevent_destroy = false
+#   }
+# }
 
 # resource "google_kms_crypto_key_iam_member" "ci" {
 #   for_each      = var.environments
