@@ -19,7 +19,7 @@ output "environments" {
     for env, cfg in var.environments : env => {
       project_id            = cfg.project_id
       service_account_email = google_service_account.ci[env].email
-      # kms_key_id            = google_kms_crypto_key.tfstate[env].id
+      kms_key_id            = google_kms_crypto_key.tfstate[env].id
       state_prefix          = google_storage_managed_folder.env[env].name
     }
   }
