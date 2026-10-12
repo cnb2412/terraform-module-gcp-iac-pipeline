@@ -1,5 +1,5 @@
-# locals {
-#   repo_name = split("/", var.github_repository)[1]
+locals {
+  repo_name = split("/", var.github_repository)[1]
 #   pool_id   = "${var.name_prefix}-github"
 #
 #   # Which workflow runs may impersonate each environment's SA.
@@ -23,24 +23,24 @@
 #     for env, cfg in var.environments : env => cfg.billing_account_id
 #     if cfg.billing_account_id != null
 #   }
-# }
-#
-# # --- CI service accounts ------------------------------------------------------------
-#
-# resource "google_service_account" "ci" {
-#   for_each     = var.environments
-#   project      = var.seed_project_id
-#   account_id   = "${var.name_prefix}-ci-${each.key}"
-#   display_name = "${local.repo_name} CI (${each.key})"
-#
-#   lifecycle {
-#     precondition {
-#       condition     = length("${var.name_prefix}-ci-${each.key}") <= 30
-#       error_message = "Service account id \"${var.name_prefix}-ci-${each.key}\" exceeds 30 characters; shorten name_prefix or the environment name."
-#     }
-#   }
-# }
-#
+}
+
+# --- CI service accounts ------------------------------------------------------------
+
+resource "google_service_account" "ci" {
+  for_each     = var.environments
+  project      = var.seed_project_id
+  account_id   = "${var.name_prefix}-ci-${each.key}"
+  display_name = "${local.repo_name} CI (${each.key})"
+
+  lifecycle {
+    precondition {
+      condition     = length("${var.name_prefix}-ci-${each.key}") <= 30
+      error_message = "Service account id \"${var.name_prefix}-ci-${each.key}\" exceeds 30 characters; shorten name_prefix or the environment name."
+    }
+  }
+}
+
 # resource "google_service_account_iam_member" "wif" {
 #   for_each           = var.environments
 #   service_account_id = google_service_account.ci[each.key].name

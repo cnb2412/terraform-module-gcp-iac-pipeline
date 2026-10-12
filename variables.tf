@@ -9,30 +9,30 @@ variable "location" {
   default = "europe-west1"
 }
 
-# variable "name_prefix" {
-#   description = "Prefix for resource names (key ring, WIF pool, service accounts), e.g. \"acme-web\"."
-#   type        = string
-#
-#   validation {
-#     condition     = can(regex("^[a-z][a-z0-9-]*[a-z0-9]$", var.name_prefix))
-#     error_message = "name_prefix must be lowercase letters, digits and hyphens, start with a letter and not end with a hyphen."
-#   }
-# }
-#
+variable "name_prefix" {
+  description = "Prefix for resource names (key ring, WIF pool, service accounts), e.g. \"acme-web\"."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]*[a-z0-9]$", var.name_prefix))
+    error_message = "name_prefix must be lowercase letters, digits and hyphens, start with a letter and not end with a hyphen."
+  }
+}
+
 variable "state_bucket_name" {
   description = "Name of the GCS bucket for remote state. Must be globally unique."
   type        = string
 }
-#
-# variable "github_repository" {
-#   description = "GitHub repository allowed to authenticate, as \"owner/name\"."
-#   type        = string
-#
-#   validation {
-#     condition     = can(regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", var.github_repository))
-#     error_message = "github_repository must have the form \"owner/name\"."
-#   }
-# }
+
+variable "github_repository" {
+  description = "GitHub repository allowed to authenticate, as \"owner/name\"."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", var.github_repository))
+    error_message = "github_repository must have the form \"owner/name\"."
+  }
+}
 #
 # variable "github_repository_id" {
 #   description = "Immutable numeric ID of the GitHub repository (gh api repos/OWNER/NAME --jq .id). Pins trust so a renamed or re-created repository cannot take over."
