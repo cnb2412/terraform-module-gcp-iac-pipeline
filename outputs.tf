@@ -12,18 +12,18 @@ output "state_bucket" {
   description = "Name of the remote state bucket."
   value       = google_storage_bucket.tfstate.name
 }
-#
-# output "environments" {
-#   description = "Per-environment hand-over values."
-#   value = {
-#     for env, cfg in var.environments : env => {
-#       project_id            = cfg.project_id
-#       service_account_email = google_service_account.ci[env].email
-#       kms_key_id            = google_kms_crypto_key.tfstate[env].id
-#       state_prefix          = google_storage_managed_folder.env[env].name
-#     }
-#   }
-# }
+
+output "environments" {
+  description = "Per-environment hand-over values."
+  value = {
+    for env, cfg in var.environments : env => {
+      project_id            = cfg.project_id
+      service_account_email = google_service_account.ci[env].email
+      # kms_key_id            = google_kms_crypto_key.tfstate[env].id
+      state_prefix          = google_storage_managed_folder.env[env].name
+    }
+  }
+}
 #
 # output "github_actions_variables" {
 #   description = "Flat map ready to be set as GitHub Actions variables (GCP_WIF_PROVIDER, TF_STATE_BUCKET, GCP_PROJECT_ID_<ENV>, GCP_CI_SA_<ENV>, TF_STATE_KMS_KEY_<ENV>)."
