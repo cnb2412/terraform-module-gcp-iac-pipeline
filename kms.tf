@@ -18,9 +18,9 @@ resource "google_kms_crypto_key" "tfstate" {
   }
 }
 
-# resource "google_kms_crypto_key_iam_member" "ci" {
-#   for_each      = var.environments
-#   crypto_key_id = google_kms_crypto_key.tfstate[each.key].id
-#   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
-#   member        = google_service_account.ci[each.key].member
-# }
+resource "google_kms_crypto_key_iam_member" "ci" {
+  for_each      = var.environments
+  crypto_key_id = google_kms_crypto_key.tfstate[each.key].id
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = google_service_account.ci[each.key].member
+}
