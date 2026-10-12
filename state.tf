@@ -18,11 +18,11 @@ resource "google_storage_bucket" "tfstate" {
   }
 }
 
-# resource "google_storage_managed_folder" "env" {
-#   for_each = var.environments
-#   bucket   = google_storage_bucket.tfstate.name
-#   name     = "${each.key}/"
-# }
+resource "google_storage_managed_folder" "env" {
+  for_each = var.environments
+  bucket   = google_storage_bucket.tfstate.name
+  name     = "${each.key}/"
+}
 #
 # resource "google_storage_managed_folder_iam_member" "ci" {
 #   for_each       = var.environments

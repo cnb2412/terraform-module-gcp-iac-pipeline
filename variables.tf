@@ -44,21 +44,21 @@ variable "state_bucket_name" {
 #   }
 # }
 #
-# variable "environments" {
-#   description = <<-EOT
-#     Deployment environments, keyed by a short lowercase name (used in state prefixes, key and SA names).
-#       project_id         - GCP project the environment's CI deploys into.
-#       billing_account_id - Billing account on which CI gets roles/billing.costsManager. null = no billing grant.
-#       ref                - Git ref allowed to impersonate this environment's SA, e.g. "refs/heads/main".
-#                            null = any workflow run of the repository.
-#       project_roles      - Roles granted to the CI SA on project_id (additive, never authoritative).
-#   EOT
-#   type = map(object({
-#     project_id         = string
-#     billing_account_id = optional(string)
-#     ref                = optional(string)
-#     project_roles      = optional(list(string), ["roles/owner"])
-#   }))
+variable "environments" {
+  description = <<-EOT
+    Deployment environments, keyed by a short lowercase name (used in state prefixes, key and SA names).
+      project_id         - GCP project the environment's CI deploys into.
+      billing_account_id - Billing account on which CI gets roles/billing.costsManager. null = no billing grant.
+      ref                - Git ref allowed to impersonate this environment's SA, e.g. "refs/heads/main".
+                           null = any workflow run of the repository.
+      project_roles      - Roles granted to the CI SA on project_id (additive, never authoritative).
+  EOT
+  type = map(object({
+    project_id         = string
+    billing_account_id = optional(string)
+    ref                = optional(string)
+    project_roles      = optional(list(string), ["roles/owner"])
+  }))
 #
 #   validation {
 #     condition     = length(var.environments) > 0
