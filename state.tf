@@ -23,11 +23,11 @@ resource "google_storage_managed_folder" "env" {
   bucket   = google_storage_bucket.tfstate.name
   name     = "${each.key}/"
 }
-#
-# resource "google_storage_managed_folder_iam_member" "ci" {
-#   for_each       = var.environments
-#   bucket         = google_storage_bucket.tfstate.name
-#   managed_folder = google_storage_managed_folder.env[each.key].name
-#   role           = "roles/storage.objectAdmin"
-#   member         = google_service_account.ci[each.key].member
-# }
+
+resource "google_storage_managed_folder_iam_member" "ci" {
+  for_each       = var.environments
+  bucket         = google_storage_bucket.tfstate.name
+  managed_folder = google_storage_managed_folder.env[each.key].name
+  role           = "roles/storage.objectAdmin"
+  member         = google_service_account.ci[each.key].member
+}
