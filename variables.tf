@@ -59,19 +59,19 @@ variable "environments" {
     ref                = optional(string)
     project_roles      = optional(list(string), ["roles/owner"])
   }))
-#
-#   validation {
-#     condition     = length(var.environments) > 0
-#     error_message = "At least one environment is required."
-#   }
-#
-#   validation {
-#     condition     = alltrue([for k in keys(var.environments) : can(regex("^[a-z][a-z0-9-]*$", k))])
-#     error_message = "Environment names must be lowercase letters, digits and hyphens, starting with a letter."
-#   }
-#
-#   validation {
-#     condition     = alltrue([for e in values(var.environments) : e.ref == null || can(regex("^refs/", e.ref))])
-#     error_message = "ref must be a full git ref such as \"refs/heads/main\" or \"refs/tags/v1\", or null."
-#   }
-# }
+
+  validation {
+    condition     = length(var.environments) > 0
+    error_message = "At least one environment is required."
+  }
+
+  validation {
+    condition     = alltrue([for k in keys(var.environments) : can(regex("^[a-z][a-z0-9-]*$", k))])
+    error_message = "Environment names must be lowercase letters, digits and hyphens, starting with a letter."
+  }
+
+  validation {
+    condition     = alltrue([for e in values(var.environments) : e.ref == null || can(regex("^refs/", e.ref))])
+    error_message = "ref must be a full git ref such as \"refs/heads/main\" or \"refs/tags/v1\", or null."
+  }
+}
