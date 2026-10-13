@@ -41,13 +41,13 @@ resource "google_service_account" "ci" {
   }
 }
 
-# resource "google_service_account_iam_member" "wif" {
-#   for_each           = var.environments
-#   service_account_id = google_service_account.ci[each.key].name
-#   role               = "roles/iam.workloadIdentityUser"
-#   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/${local.principal_attr[each.key]}"
-# }
-#
+resource "google_service_account_iam_member" "wif" {
+  for_each           = var.environments
+  service_account_id = google_service_account.ci[each.key].name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/${local.principal_attr[each.key]}"
+}
+
 # --- Grants in the environment (additive only, never _policy/_binding) --------------
 
 resource "google_project_iam_member" "ci" {
