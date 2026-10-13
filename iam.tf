@@ -18,11 +18,11 @@ locals {
       ]
     ]) : "${g.env}/${g.role}" => g
   }
-#
-#   billing_grants = {
-#     for env, cfg in var.environments : env => cfg.billing_account_id
-#     if cfg.billing_account_id != null
-#   }
+
+  billing_grants = {
+    for env, cfg in var.environments : env => cfg.billing_account_id
+    if cfg.billing_account_id != null
+  }
 }
 
 # --- CI service accounts ------------------------------------------------------------
@@ -57,9 +57,9 @@ resource "google_project_iam_member" "ci" {
   member   = google_service_account.ci[each.value.env].member
 }
 
-# resource "google_billing_account_iam_member" "ci_costs" {
-#   for_each           = local.billing_grants
-#   billing_account_id = each.value
-#   role               = "roles/billing.costsManager"
-#   member             = google_service_account.ci[each.key].member
-# }
+resource "google_billing_account_iam_member" "ci_costs" {
+  for_each           = local.billing_grants
+  billing_account_id = each.value
+  role               = "roles/billing.costsManager"
+  member             = google_service_account.ci[each.key].member
+}
