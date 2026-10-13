@@ -14,7 +14,7 @@ output "state_bucket" {
 }
 
 output "environments" {
-  description = "Per-environment hand-over values."
+  description = "Per-environment hand-over values: map(env => { project_id, service_account_email, kms_key_id, state_prefix })."
   value = {
     for env, cfg in var.environments : env => {
       project_id            = cfg.project_id
@@ -26,7 +26,7 @@ output "environments" {
 }
 
 output "github_actions_variables" {
-  description = "Flat map ready to be set as GitHub Actions variables (GCP_WIF_PROVIDER, TF_STATE_BUCKET, GCP_PROJECT_ID_<ENV>, GCP_CI_SA_<ENV>, TF_STATE_KMS_KEY_<ENV>)."
+  description = "Flat map ready to be set as GitHub Actions variables (GCP_WIF_PROVIDER, TF_STATE_BUCKET, GCP_PROJECT_ID_{ENV}, GCP_CI_SA_{ENV}, TF_STATE_KMS_KEY_{ENV}). {ENV} is the environment name uppercased with - replaced by _."
   value = merge(
     {
       GCP_WIF_PROVIDER = google_iam_workload_identity_pool_provider.github.name

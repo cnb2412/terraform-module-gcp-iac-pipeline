@@ -80,17 +80,33 @@ The seed project must have these APIs enabled: `storage.googleapis.com`, `cloudk
 `iam.googleapis.com`, `iamcredentials.googleapis.com`, `sts.googleapis.com`,
 `cloudresourcemanager.googleapis.com` and `cloudbilling.googleapis.com`.
 
-## Inputs
+## Inputs and outputs
 
-| Name | Type | Required | Description |
-|---|---|---|---|
-| `seed_project_id` | `string` | yes | Project that hosts bucket, KMS, WIF pool and service accounts. |
-| `location` | `string` | yes | Location of the bucket and key ring. |
-| `name_prefix` | `string` | yes | Prefix for the key ring (`<p>-tfstate`), pool (`<p>-github`) and SAs (`<p>-ci-<env>`). |
-| `state_bucket_name` | `string` | yes | Globally unique bucket name. |
-| `github_repository` | `string` | yes | `owner/name`. |
-| `github_repository_id` | `string` | yes | Numeric repository ID. |
-| `environments` | `map(object)` | yes | See below. |
+<!-- BEGIN_TF_DOCS -->
+### Inputs
+
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| environments | Deployment environments, keyed by a short lowercase name (used in state prefixes, key and SA names).<br/>  project\_id         - GCP project the environment's CI deploys into.<br/>  billing\_account\_id - Billing account on which CI gets roles/billing.costsManager. null = no billing grant.<br/>  ref                - Git ref allowed to impersonate this environment's SA, e.g. "refs/heads/main".<br/>                       null = any workflow run of the repository.<br/>  project\_roles      - Roles granted to the CI SA on project\_id (additive, never authoritative). | <pre>map(object({<br/>    project_id         = string<br/>    billing_account_id = optional(string)<br/>    ref                = optional(string)<br/>    project_roles      = optional(list(string), ["roles/owner"])<br/>  }))</pre> | n/a | yes |
+| github\_repository | GitHub repository allowed to authenticate, as "owner/name". | `string` | n/a | yes |
+| github\_repository\_id | Immutable numeric ID of the GitHub repository (gh api repos/OWNER/NAME --jq .id). Pins trust so a renamed or re-created repository cannot take over. | `string` | n/a | yes |
+| location | Location of the state bucket and the KMS key ring, e.g. "europe-west1". | `string` | `"europe-west1"` | no |
+| name\_prefix | Prefix for resource names (key ring, WIF pool, service accounts), e.g. "acme-web". | `string` | n/a | yes |
+| seed\_project\_id | Project that hosts the state bucket, KMS keys, Workload Identity pool and CI service accounts. | `string` | n/a | yes |
+| state\_bucket\_name | Name of the GCS bucket for remote state. Must be globally unique. | `string` | n/a | yes |
+
+### Outputs
+
+| Name | Description |
+| ---- | ----------- |
+| environments | Per-environment hand-over values: map(env => { project\_id, service\_account\_email, kms\_key\_id, state\_prefix }). |
+| github\_actions\_variables | Flat map ready to be set as GitHub Actions variables (GCP\_WIF\_PROVIDER, TF\_STATE\_BUCKET, GCP\_PROJECT\_ID\_{ENV}, GCP\_CI\_SA\_{ENV}, TF\_STATE\_KMS\_KEY\_{ENV}). {ENV} is the environment name uppercased with - replaced by \_. |
+| state\_bucket | Name of the remote state bucket. |
+| workload\_identity\_pool | Full resource name of the Workload Identity pool. |
+| workload\_identity\_provider | Full resource name of the GitHub OIDC provider, for google-github-actions/auth. |
+<!-- END_TF_DOCS -->
+
+### `environments` entries
 
 Each entry in `environments` has these fields:
 
@@ -107,15 +123,7 @@ These limits are checked at plan time:
 - The pool id `<name_prefix>-github` must be 4–32 characters.
 - Environment names may contain only lowercase letters, digits and hyphens.
 
-## Outputs
-
-| Name | Description |
-|---|---|
-| `workload_identity_provider` | Full provider resource name, used as `workload_identity_provider` in `google-github-actions/auth`. |
-| `workload_identity_pool` | Full pool resource name. |
-| `state_bucket` | Bucket name. |
-| `environments` | `map(env => { project_id, service_account_email, kms_key_id, state_prefix })`. |
-| `github_actions_variables` | Flat map: `GCP_WIF_PROVIDER`, `TF_STATE_BUCKET`, plus `GCP_PROJECT_ID_<ENV>`, `GCP_CI_SA_<ENV>` and `TF_STATE_KMS_KEY_<ENV>` for each environment. The env name is uppercased with `-` → `_`. |
+### Pushing outputs to GitHub
 
 To push the outputs into the application repository as GitHub Actions variables:
 
@@ -195,7 +203,7 @@ deal with that key on purpose.
 | `kms.tf` | Key ring, one key per environment, key IAM |
 | `wif.tf` | Workload Identity pool and GitHub OIDC provider |
 | `iam.tf` | CI service accounts, `workloadIdentityUser`, project and billing grants |
-| `variables.tf`, `outputs.tf`, `versions.tf` | Interface and version constraints |
+| `variables.tf`, `outputs.tf`, `provider.tf` | Interface and version constraints |
 | `examples/basic/` | Example caller |
 
 ## Requirements

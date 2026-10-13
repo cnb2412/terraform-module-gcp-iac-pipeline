@@ -1,0 +1,20 @@
+formatter: markdown table
+
+# Only inputs and outputs are generated; everything else in README.md is hand-written.
+sections:
+  show:
+    - inputs
+    - outputs
+
+output:
+  file: README.md
+  mode: inject
+
+settings:
+  anchor: false
+  indent: 3
+  default: true
+  escape: true
+  hide-empty: true
+  required: true
+  type: true
