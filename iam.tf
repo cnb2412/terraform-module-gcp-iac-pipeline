@@ -11,13 +11,13 @@ locals {
 #     )
 #   }
 #
-#   project_grants = {
-#     for g in flatten([
-#       for env, cfg in var.environments : [
-#         for role in cfg.project_roles : { env = env, project = cfg.project_id, role = role }
-#       ]
-#     ]) : "${g.env}/${g.role}" => g
-#   }
+  project_grants = {
+    for g in flatten([
+      for env, cfg in var.environments : [
+        for role in cfg.project_roles : { env = env, project = cfg.project_id, role = role }
+      ]
+    ]) : "${g.env}/${g.role}" => g
+  }
 #
 #   billing_grants = {
 #     for env, cfg in var.environments : env => cfg.billing_account_id
@@ -48,15 +48,15 @@ resource "google_service_account" "ci" {
 #   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/${local.principal_attr[each.key]}"
 # }
 #
-# # --- Grants in the environment (additive only, never _policy/_binding) --------------
-#
-# resource "google_project_iam_member" "ci" {
-#   for_each = local.project_grants
-#   project  = each.value.project
-#   role     = each.value.role
-#   member   = google_service_account.ci[each.value.env].member
-# }
-#
+# --- Grants in the environment (additive only, never _policy/_binding) --------------
+
+resource "google_project_iam_member" "ci" {
+  for_each = local.project_grants
+  project  = each.value.project
+  role     = each.value.role
+  member   = google_service_account.ci[each.value.env].member
+}
+
 # resource "google_billing_account_iam_member" "ci_costs" {
 #   for_each           = local.billing_grants
 #   billing_account_id = each.value
