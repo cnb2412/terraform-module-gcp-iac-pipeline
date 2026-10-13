@@ -33,17 +33,17 @@ variable "github_repository" {
     error_message = "github_repository must have the form \"owner/name\"."
   }
 }
-#
-# variable "github_repository_id" {
-#   description = "Immutable numeric ID of the GitHub repository (gh api repos/OWNER/NAME --jq .id). Pins trust so a renamed or re-created repository cannot take over."
-#   type        = string
-#
-#   validation {
-#     condition     = can(regex("^[0-9]+$", var.github_repository_id))
-#     error_message = "github_repository_id must be numeric."
-#   }
-# }
-#
+
+variable "github_repository_id" {
+  description = "Immutable numeric ID of the GitHub repository (gh api repos/OWNER/NAME --jq .id). Pins trust so a renamed or re-created repository cannot take over."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_repository_id))
+    error_message = "github_repository_id must be numeric."
+  }
+}
+
 variable "environments" {
   description = <<-EOT
     Deployment environments, keyed by a short lowercase name (used in state prefixes, key and SA names).
