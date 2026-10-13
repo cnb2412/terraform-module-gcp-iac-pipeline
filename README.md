@@ -213,6 +213,18 @@ deal with that key on purpose.
 | OpenTofu / Terraform | ≥ 1.6 / ≥ 1.3 |
 | `hashicorp/google` | ≥ 5.41 |
 
+## Development
+
+Run the same checks as CI locally with `pre-commit run --all-files`. It needs `tofu`, `tflint`,
+`trivy`, `terraform-docs` and `pre-commit`. The hooks run fmt, validate, tflint, trivy (HIGH and
+CRITICAL) and terraform-docs, which regenerates the input and output tables above.
+
+CI (`.github/workflows/ci.yml`) runs these hooks on every push to `main` and on every pull request. It also:
+
+- validates the module with the minimum and the latest versions of OpenTofu, Terraform and the
+  `google` provider from the table above,
+- uploads trivy findings of every severity to the repository's Security tab, without failing the build.
+
 ## Known gaps
 
 These were noted on 2026-10-11 and are not yet resolved:
@@ -220,3 +232,9 @@ These were noted on 2026-10-11 and are not yet resolved:
 - **No KMS key rotation.** `rotation_period` is not set and there is no input for it.
 - **`roles/owner` is the default `project_roles`.** It is broad. Set narrower roles for each
   environment where you can, as `examples/basic` does for production.
+
+Noted on 2026-10-13:
+
+- **Tool versions are not updated automatically.** Dependabot bumps the GitHub Actions only. The
+  hook revisions in `.pre-commit-config.yaml`, the tflint plugin and the tool versions in
+  `ci.yml` need `pre-commit autoupdate` and manual bumps, or Renovate.
