@@ -6,7 +6,7 @@ variable "seed_project_id" {
 variable "location" {
   description = "Location of the state bucket and the KMS key ring, e.g. \"europe-west1\"."
   type        = string
-  default = "europe-west1"
+  default     = "europe-west1"
 }
 
 variable "name_prefix" {

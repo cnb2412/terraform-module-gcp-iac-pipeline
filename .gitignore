@@ -85,6 +85,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# This is a reusable module: callers pin provider versions in their own lock file
+.terraform.lock.hcl
+
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json
