@@ -1,16 +1,16 @@
 locals {
   repo_name = split("/", var.github_repository)[1]
-#   pool_id   = "${var.name_prefix}-github"
-#
-#   # Which workflow runs may impersonate each environment's SA.
-#   principal_attr = {
-#     for env, cfg in var.environments : env => (
-#       cfg.ref == null
-#       ? "attribute.repository/${var.github_repository}"
-#       : "attribute.repo_ref/${var.github_repository}@${cfg.ref}"
-#     )
-#   }
-#
+  pool_id   = "${var.name_prefix}-github"
+
+  # Which workflow runs may impersonate each environment's SA.
+  principal_attr = {
+    for env, cfg in var.environments : env => (
+      cfg.ref == null
+      ? "attribute.repository/${var.github_repository}"
+      : "attribute.repo_ref/${var.github_repository}@${cfg.ref}"
+    )
+  }
+
   project_grants = {
     for g in flatten([
       for env, cfg in var.environments : [

@@ -1,17 +1,17 @@
-# # --- Workload Identity Federation (GitHub Actions OIDC) ---------------------------
-#
-# resource "google_iam_workload_identity_pool" "github" {
-#   project                   = var.seed_project_id
-#   workload_identity_pool_id = local.pool_id
-#   display_name              = substr("${local.repo_name} GitHub Actions", 0, 32)
-#
-#   lifecycle {
-#     precondition {
-#       condition     = length(local.pool_id) >= 4 && length(local.pool_id) <= 32
-#       error_message = "Workload identity pool id \"${local.pool_id}\" must be 4-32 characters; shorten name_prefix."
-#     }
-#   }
-# }
+# --- Workload Identity Federation (GitHub Actions OIDC) ---------------------------
+
+resource "google_iam_workload_identity_pool" "github" {
+  project                   = var.seed_project_id
+  workload_identity_pool_id = local.pool_id
+  display_name              = substr("${local.repo_name} GitHub Actions", 0, 32)
+
+  lifecycle {
+    precondition {
+      condition     = length(local.pool_id) >= 4 && length(local.pool_id) <= 32
+      error_message = "Workload identity pool id \"${local.pool_id}\" must be 4-32 characters; shorten name_prefix."
+    }
+  }
+}
 #
 # resource "google_iam_workload_identity_pool_provider" "github" {
 #   project                            = var.seed_project_id
