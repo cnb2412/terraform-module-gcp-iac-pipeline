@@ -14,13 +14,15 @@ output "state_bucket" {
 }
 
 output "environments" {
-  description = "Per-environment hand-over values: map(env => { project_id, service_account_email, kms_key_id, state_prefix })."
+  description = "Per-environment hand-over values: map(env => { project_id, service_account_email, service_account_name, service_account_member, kms_key_id, state_prefix })."
   value = {
     for env, cfg in var.environments : env => {
-      project_id            = cfg.project_id
-      service_account_email = google_service_account.ci[env].email
-      kms_key_id            = google_kms_crypto_key.tfstate[env].id
-      state_prefix          = google_storage_managed_folder.env[env].name
+      project_id             = cfg.project_id
+      service_account_email  = google_service_account.ci[env].email
+      service_account_name   = google_service_account.ci[env].name
+      service_account_member = google_service_account.ci[env].member
+      kms_key_id             = google_kms_crypto_key.tfstate[env].id
+      state_prefix           = google_storage_managed_folder.env[env].name
     }
   }
 }

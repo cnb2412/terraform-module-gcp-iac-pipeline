@@ -19,6 +19,14 @@ locals {
     ]) : "${g.env}/${g.role}" => g
   }
 
+  self_grants = {
+    for g in flatten([
+      for env, cfg in var.environments : [
+        for role in cfg.self_roles : { env = env, role = role }
+      ]
+    ]) : "${g.env}/${g.role}" => g
+  }
+
   billing_grants = {
     for env, cfg in var.environments : env => cfg.billing_account_id
     if cfg.billing_account_id != null
@@ -46,6 +54,14 @@ resource "google_service_account_iam_member" "wif" {
   service_account_id = google_service_account.ci[each.key].name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/${local.principal_attr[each.key]}"
+}
+
+# Roles the SA holds on itself (e.g. signJwt/signBlob). Never widens who can impersonate it.
+resource "google_service_account_iam_member" "ci_self" {
+  for_each           = local.self_grants
+  service_account_id = google_service_account.ci[each.value.env].name
+  role               = each.value.role
+  member             = google_service_account.ci[each.value.env].member
 }
 
 # --- Grants in the environment (additive only, never _policy/_binding) --------------

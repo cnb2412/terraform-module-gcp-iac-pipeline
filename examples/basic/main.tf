@@ -31,6 +31,8 @@ module "ci_bootstrap" {
       project_id         = "acme-web-staging"
       billing_account_id = "000000-000000-000000"
       # any workflow run of the repository
+      # lets the SA sign its own JWTs / blobs (signed URLs)
+      self_roles = ["roles/iam.serviceAccountTokenCreator"]
     }
     production = {
       project_id         = "acme-web-prod"
