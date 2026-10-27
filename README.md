@@ -48,7 +48,7 @@ billing accounts:    roles/billing.costsManager        → SA <env>
 
 ```hcl
 module "ci_bootstrap" {
-  source = "git::https://github.com/OWNER/REPO.git?ref=v1.0.0"
+  source = "git::https://github.com/OWNER/REPO.git?ref=v0.1.0"
 
   seed_project_id      = "acme-iac-seed"
   location             = "europe-west1"
