@@ -1,5 +1,9 @@
 # Minimal example: one repository, a staging and a production environment.
 # All values are placeholders; replace them before running.
+#
+# Staging shows both ways to grant roles on a CI service account:
+#   - self_roles: the SA gets the role on itself (module-managed),
+#   - a caller-side grant to another principal, using the module's outputs.
 
 terraform {
   required_version = ">= 1.6"
@@ -31,7 +35,10 @@ module "ci_bootstrap" {
       project_id         = "acme-web-staging"
       billing_account_id = "000000-000000-000000"
       # any workflow run of the repository
-      # lets the SA sign its own JWTs / blobs (signed URLs)
+      # The SA lives in the seed project, so project_roles can't grant this.
+      # Lets the pipeline call signBlob/signJwt as itself, e.g.
+      # `gcloud storage sign-url --impersonate-service-account=...` or V4 signed
+      # URLs from client libraries, without a key file.
       self_roles = ["roles/iam.serviceAccountTokenCreator"]
     }
     production = {
@@ -42,6 +49,15 @@ module "ci_bootstrap" {
       project_roles = ["roles/editor", "roles/resourcemanager.projectIamAdmin"]
     }
   }
+}
+
+# Caller-side grant on the staging SA, e.g. so platform admins can run
+# `tofu plan --impersonate-service-account` locally. Unlike self_roles this widens
+# who can act as the SA, so keep it off production.
+resource "google_service_account_iam_member" "staging_admins_impersonate" {
+  service_account_id = module.ci_bootstrap.environments["staging"].service_account_name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "group:platform-admins@acme.example"
 }
 
 output "github_actions_variables" {

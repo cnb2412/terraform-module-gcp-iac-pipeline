@@ -39,6 +39,10 @@ billing accounts:    roles/billing.costsManager        → SA <env>
     branches in the same repository. This fits staging.
   - `ref = "refs/heads/main"`: only runs whose `GITHUB_REF` is exactly that ref. This fits production.
     Combine it with branch protection on `main`.
+- **Grants on the service account itself**: `self_roles` only ever names the SA itself as member,
+  so it can't add a new way to become the SA. Grants you add in your own code using the
+  `service_account_name` output can, so they need the same care as `ref`
+  (see [Roles on the CI service account](#roles-on-the-ci-service-account)).
 - **Isolation between environments**: each service account can only reach its own state folder and its own KMS key.
   A compromised staging run can neither read nor decrypt production state.
 - **Grants are always `_iam_member`** and never `_iam_binding` or `_iam_policy`. The module adds
@@ -70,7 +74,7 @@ module "ci_bootstrap" {
 ```
 
 [`examples/basic`](examples/basic/main.tf) has a complete runnable configuration that sets
-billing accounts and narrower project roles.
+billing accounts, narrower project roles, `self_roles` and a caller-side grant on the staging SA.
 
 The module does not configure a provider. The caller passes in a `google` provider. Whoever runs
 the apply needs, in the seed project, permission to create buckets, KMS resources, WIF pools and
@@ -134,6 +138,45 @@ tofu output -json github_actions_variables \
   | jq -r 'to_entries[] | "\(.key) \(.value)"' \
   | while read -r k v; do gh variable set "$k" --body "$v" --repo OWNER/NAME; done
 ```
+
+## Roles on the CI service account
+
+The CI service accounts live in the **seed project**, not in the target project. `project_roles`
+therefore can't grant anything on the SA itself, not even with `roles/owner`. There are two ways
+to grant roles on the SA.
+
+**`self_roles`: the SA on itself.** The usual case is `roles/iam.serviceAccountTokenCreator`, which
+lets the pipeline call `signBlob`/`signJwt` as its own identity. Without a key file, that is how
+it creates signed URLs or self-signed JWTs:
+
+```hcl
+environments = {
+  staging = {
+    project_id = "acme-web-staging"
+    self_roles = ["roles/iam.serviceAccountTokenCreator"]
+  }
+}
+```
+
+```yaml
+  - run: |
+      gcloud storage sign-url gs://acme-web-assets/report.pdf --duration=1h \
+        --impersonate-service-account=${{ vars.GCP_CI_SA_STAGING }}
+```
+
+**Your own grants to other principals.** The `environments` output has `service_account_name` and
+`service_account_member` for each environment, so you can add grants in your own code:
+
+```hcl
+resource "google_service_account_iam_member" "staging_admins_impersonate" {
+  service_account_id = module.ci_bootstrap.environments["staging"].service_account_name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "group:platform-admins@acme.example"
+}
+```
+
+A grant like this gives the group a second way to act as the SA, alongside GitHub Actions.
+Keep such grants off production.
 
 ## Consuming it from the pipeline
 
@@ -206,7 +249,7 @@ deal with that key on purpose.
 | `wif.tf` | Workload Identity pool and GitHub OIDC provider |
 | `iam.tf` | CI service accounts, `workloadIdentityUser`, self grants, project and billing grants |
 | `variables.tf`, `outputs.tf`, `provider.tf` | Interface and version constraints |
-| `examples/basic/` | Example caller |
+| `examples/basic/` | Example caller, including `self_roles` and a caller-side SA grant |
 
 ## Requirements
 
