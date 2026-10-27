@@ -64,6 +64,7 @@ module "ci_bootstrap" {
   environments = {
     staging = {
       project_id = "acme-web-staging"
+      self_roles = ["roles/iam.serviceAccountTokenCreator"] # signed URLs / JWTs as itself
     }
     production = {
       project_id = "acme-web-prod"
