@@ -52,12 +52,15 @@ variable "environments" {
       ref                - Git ref allowed to impersonate this environment's SA, e.g. "refs/heads/main".
                            null = any workflow run of the repository.
       project_roles      - Roles granted to the CI SA on project_id (additive, never authoritative).
+      self_roles         - Roles granted to the CI SA on itself, e.g. roles/iam.serviceAccountTokenCreator
+                           so it can sign its own JWTs and blobs. The member is always the SA itself.
   EOT
   type = map(object({
     project_id         = string
     billing_account_id = optional(string)
     ref                = optional(string)
     project_roles      = optional(list(string), ["roles/owner"])
+    self_roles         = optional(list(string), [])
   }))
 
   validation {

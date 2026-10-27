@@ -22,6 +22,7 @@ seed project
 │       condition: repository_id == <id> && repository == <owner/name>
 └── service accounts <prefix>-ci-<env>
         workloadIdentityUser ← principalSet (whole repo, or a single ref)
+        <env>.self_roles     ← SA <env> itself
 
 target projects:     <env>.project_roles               → SA <env>
 billing accounts:    roles/billing.costsManager        → SA <env>
@@ -87,7 +88,7 @@ The seed project must have these APIs enabled: `storage.googleapis.com`, `cloudk
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| environments | Deployment environments, keyed by a short lowercase name (used in state prefixes, key and SA names).<br/>  project\_id         - GCP project the environment's CI deploys into.<br/>  billing\_account\_id - Billing account on which CI gets roles/billing.costsManager. null = no billing grant.<br/>  ref                - Git ref allowed to impersonate this environment's SA, e.g. "refs/heads/main".<br/>                       null = any workflow run of the repository.<br/>  project\_roles      - Roles granted to the CI SA on project\_id (additive, never authoritative). | <pre>map(object({<br/>    project_id         = string<br/>    billing_account_id = optional(string)<br/>    ref                = optional(string)<br/>    project_roles      = optional(list(string), ["roles/owner"])<br/>  }))</pre> | n/a | yes |
+| environments | Deployment environments, keyed by a short lowercase name (used in state prefixes, key and SA names).<br/>  project\_id         - GCP project the environment's CI deploys into.<br/>  billing\_account\_id - Billing account on which CI gets roles/billing.costsManager. null = no billing grant.<br/>  ref                - Git ref allowed to impersonate this environment's SA, e.g. "refs/heads/main".<br/>                       null = any workflow run of the repository.<br/>  project\_roles      - Roles granted to the CI SA on project\_id (additive, never authoritative).<br/>  self\_roles         - Roles granted to the CI SA on itself, e.g. roles/iam.serviceAccountTokenCreator<br/>                       so it can sign its own JWTs and blobs. The member is always the SA itself. | <pre>map(object({<br/>    project_id         = string<br/>    billing_account_id = optional(string)<br/>    ref                = optional(string)<br/>    project_roles      = optional(list(string), ["roles/owner"])<br/>    self_roles         = optional(list(string), [])<br/>  }))</pre> | n/a | yes |
 | github\_repository | GitHub repository allowed to authenticate, as "owner/name". | `string` | n/a | yes |
 | github\_repository\_id | Immutable numeric ID of the GitHub repository (gh api repos/OWNER/NAME --jq .id). Pins trust so a renamed or re-created repository cannot take over. | `string` | n/a | yes |
 | location | Location of the state bucket and the KMS key ring, e.g. "europe-west1". | `string` | `"europe-west1"` | no |
@@ -99,7 +100,7 @@ The seed project must have these APIs enabled: `storage.googleapis.com`, `cloudk
 
 | Name | Description |
 | ---- | ----------- |
-| environments | Per-environment hand-over values: map(env => { project\_id, service\_account\_email, kms\_key\_id, state\_prefix }). |
+| environments | Per-environment hand-over values: map(env => { project\_id, service\_account\_email, service\_account\_name, service\_account\_member, kms\_key\_id, state\_prefix }). |
 | github\_actions\_variables | Flat map ready to be set as GitHub Actions variables (GCP\_WIF\_PROVIDER, TF\_STATE\_BUCKET, GCP\_PROJECT\_ID\_{ENV}, GCP\_CI\_SA\_{ENV}, TF\_STATE\_KMS\_KEY\_{ENV}). {ENV} is the environment name uppercased with - replaced by \_. |
 | state\_bucket | Name of the remote state bucket. |
 | workload\_identity\_pool | Full resource name of the Workload Identity pool. |
@@ -116,6 +117,7 @@ Each entry in `environments` has these fields:
 | `billing_account_id` | `string` | `null` | Grants `roles/billing.costsManager` (for budgets) when set. |
 | `ref` | `string` | `null` | Full git ref allowed to impersonate the SA; `null` = whole repository. |
 | `project_roles` | `list(string)` | `["roles/owner"]` | Roles granted to the SA on `project_id`. |
+| `self_roles` | `list(string)` | `[]` | Roles granted to the SA on itself, e.g. `roles/iam.serviceAccountTokenCreator` for `signJwt`/`signBlob`. `project_roles` can't do this because the SA lives in the seed project. |
 
 These limits are checked at plan time:
 
@@ -202,7 +204,7 @@ deal with that key on purpose.
 | `state.tf` | State bucket, one managed folder per environment, folder IAM |
 | `kms.tf` | Key ring, one key per environment, key IAM |
 | `wif.tf` | Workload Identity pool and GitHub OIDC provider |
-| `iam.tf` | CI service accounts, `workloadIdentityUser`, project and billing grants |
+| `iam.tf` | CI service accounts, `workloadIdentityUser`, self grants, project and billing grants |
 | `variables.tf`, `outputs.tf`, `provider.tf` | Interface and version constraints |
 | `examples/basic/` | Example caller |
 
@@ -238,3 +240,8 @@ Noted on 2026-10-13:
 - **Tool versions are not updated automatically.** Dependabot bumps the GitHub Actions only. The
   hook revisions in `.pre-commit-config.yaml`, the tflint plugin and the tool versions in
   `ci.yml` need `pre-commit autoupdate` and manual bumps, or Renovate.
+
+Noted on 2026-10-27:
+
+- **README and code disagree on `prevent_destroy`.** "Destroying" says the state bucket and KMS
+  keys have `prevent_destroy = true`, but `state.tf` and `kms.tf` set it to `false`.
