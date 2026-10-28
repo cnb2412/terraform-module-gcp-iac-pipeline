@@ -232,14 +232,17 @@ terraform {
 
 ## Destroying
 
-The state bucket and the KMS keys have `lifecycle { prevent_destroy = true }`. Terraform does not
-allow this setting to come from a variable, so it is hardcoded. To tear the module down you have
-to remove those lines in a local copy. Even then, GCP never deletes KMS keys. It only destroys
-their key versions, and a key ring name can't be reused in the same project and location.
+The state bucket and the KMS keys have `lifecycle { prevent_destroy = false }`, so nothing in the
+module blocks a destroy. Terraform does not allow this setting to come from a variable. If you want
+the protection, set it to `true` in a local copy. Even without it, GCP never deletes KMS keys. It
+only destroys their key versions, and a key ring name can't be reused in the same project and
+location. The bucket does not set `force_destroy`, so deleting it fails while it still holds
+state objects.
 
-Removing an environment from `environments` deletes that environment's service account, its grants and
-its managed folder. Its KMS key is protected by `prevent_destroy`, so the plan fails until you
-deal with that key on purpose.
+Removing an environment from `environments` deletes that environment's service account, its grants
+and its managed folder, and destroys the key versions of its KMS key. State encrypted with that key
+can no longer be decrypted once the versions are gone. Move or decrypt that environment's state
+first if you still need it.
 
 ## Layout
 
@@ -284,8 +287,3 @@ Noted on 2026-10-13:
 - **Tool versions are not updated automatically.** Dependabot bumps the GitHub Actions only. The
   hook revisions in `.pre-commit-config.yaml`, the tflint plugin and the tool versions in
   `ci.yml` need `pre-commit autoupdate` and manual bumps, or Renovate.
-
-Noted on 2026-10-27:
-
-- **README and code disagree on `prevent_destroy`.** "Destroying" says the state bucket and KMS
-  keys have `prevent_destroy = true`, but `state.tf` and `kms.tf` set it to `false`.
